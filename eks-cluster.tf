@@ -14,7 +14,7 @@ module "eks" {
   vpc_id = module.vpc.vpc_id
 
   eks_managed_node_group_defaults = {
-    ami_type               = "AL2023_ARM64_STANDARD"
+    ami_type               = "AL2023_ARM_64_STANDARD"
     instance_types         = ["t4g.medium"]
     vpc_security_group_ids = [aws_security_group.all_worker_mgmt.id]
   }
