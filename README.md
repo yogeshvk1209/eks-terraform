@@ -1,1 +1,1 @@
-Repo for deploying and managing EKV via terraform
+Repo for deploying and managing EKS via terraform using Modules
