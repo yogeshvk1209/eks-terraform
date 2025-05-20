@@ -1,9 +1,9 @@
-resource "aws_security_group" "all_worker_mgmt" {
-  name_prefix = "all_worker_management"
+resource "aws_security_group" "app_test_worker" {
+  name_prefix = "app_test_worker_management"
   vpc_id      = module.vpc.vpc_id
 }
 
-resource "aws_security_group_rule" "all_worker_mgmt_ingress" {
+resource "aws_security_group_rule" "app_test_worker_mgmt_ingress" {
   description       = "allow inbound traffic from eks"
   from_port         = 0
   protocol          = "-1"
@@ -17,7 +17,7 @@ resource "aws_security_group_rule" "all_worker_mgmt_ingress" {
   ]
 }
 
-resource "aws_security_group_rule" "all_worker_mgmt_egress" {
+resource "aws_security_group_rule" "app_test_worker_mgmt_egress" {
   description       = "allow outbound traffic to anywhere"
   from_port         = 0
   protocol          = "-1"
