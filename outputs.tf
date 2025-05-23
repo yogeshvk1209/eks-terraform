@@ -51,11 +51,6 @@ output "cluster_certificate_authority_data" {
   value       = module.eks.cluster_certificate_authority_data
 }
 
-output "aws_auth_configmap_yaml" {
-  description = "Formatted yaml output for aws-auth ConfigMap."
-  value       = module.eks.aws_auth_configmap_yaml
-}
-
 # Cluster Security
 output "cluster_primary_security_group_id" {
   description = "Cluster security group that was created by Amazon EKS for the cluster."
@@ -66,4 +61,15 @@ output "cluster_primary_security_group_id" {
 output "node_security_group_id" {
   description = "Security group ID attached to the EKS nodes."
   value       = module.eks.node_security_group_id
+}
+
+# Access Configuration
+output "cluster_name" {
+  description = "The name of the EKS cluster."
+  value       = module.eks.cluster_name
+}
+
+output "cluster_arn" {
+  description = "The Amazon Resource Name (ARN) of the cluster."
+  value       = module.eks.cluster_arn
 }
