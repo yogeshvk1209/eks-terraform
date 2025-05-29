@@ -5,6 +5,7 @@ module "eks" {
   cluster_version = var.kubernetes_version
   subnet_ids      = module.vpc.private_subnets
   cluster_endpoint_public_access = true
+  enable_cluster_creator_admin_permissions = true
 
   enable_irsa = true
 
@@ -16,7 +17,7 @@ module "eks" {
 
   eks_managed_node_group_defaults = {
     ami_type               = "AL2023_ARM_64_STANDARD"
-    instance_types         = ["t4g.medium","m6g.medium"]
+    instance_types         = ["t4g.medium","t4g.small"]
     vpc_security_group_ids = [aws_security_group.app_test_worker_mgmt.id]
   }
 
