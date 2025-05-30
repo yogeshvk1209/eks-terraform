@@ -100,6 +100,9 @@ Before you begin, ensure you have:
    - A monitoring script is included to watch for errors during provisioning
    - Auto-destroy functionality if errors occur
 
+## Testing containers and other internal k8s stuff
+Use git repo - https://github.com/yogeshvk1209/microservice_k8s to test out K8S deployments
+
 ## Cleanup
 
 To destroy all resources:
