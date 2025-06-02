@@ -27,7 +27,24 @@ module "eks" {
       min_size     = 1
       max_size     = 3
       desired_size = 2
-      capacity_type = "SPOT"
+      #capacity_type = "SPOT"
     }
   }
+  
+## Cluster Access Entry example
+#  access_entries = {
+  # One access entry with a policy associated
+#    example = {
+#      principal_arn = "arn:aws:iam::123456789012:role/something"
+#      policy_associations = {
+#        example = {
+#          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+#          access_scope = {
+#            namespaces = ["default"]
+#            type       = "namespace"
+#          }
+#        }
+#      }
+#    }
+#  }
 }
