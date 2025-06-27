@@ -19,15 +19,15 @@ output "oidc_provider_arn" {
 }
 
 # Node Group Outputs
-output "eks_managed_node_groups" {
-  description = "EKS managed node groups configuration."
-  value       = module.eks.eks_managed_node_groups
-}
+#output "eks_managed_node_groups" {
+#  description = "EKS managed node groups configuration."
+#  value       = module.eks.eks_managed_node_groups
+#}
 
-output "eks_managed_node_groups_autoscaling_group_names" {
-  description = "Names of the EKS managed node groups ASGs."
-  value       = module.eks.eks_managed_node_groups_autoscaling_group_names
-}
+#output "eks_managed_node_groups_autoscaling_group_names" {
+#  description = "Names of the EKS managed node groups ASGs."
+#  value       = module.eks.eks_managed_node_groups_autoscaling_group_names
+#}
 
 # VPC Outputs
 output "vpc_id" {
