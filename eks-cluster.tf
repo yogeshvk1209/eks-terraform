@@ -8,8 +8,12 @@ module "eks" {
   enable_cluster_creator_admin_permissions = true
 
   cluster_addons = {
-    coredns                = {}
-    vpc-cni                = {}
+    coredns                = {
+      version  =  var.coredns_version
+    }
+    vpc-cni                = {
+      version  =  var.vpc_cni_version
+    }
   }
 
   enable_irsa = true
@@ -28,11 +32,12 @@ module "eks" {
 
   eks_managed_node_groups = {
 
-    node_group = {
+    node_group1 = {
       min_size     = 1
       max_size     = 3
       desired_size = 2
       #capacity_type = "SPOT"
+      cluster_version = var.node_eks_version
     }
   }
   
