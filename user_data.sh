@@ -16,9 +16,10 @@ log() {
 
 log "Starting EKS node bootstrap process for AL2023"
 
-# Get instance metadata
-INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
+# Get instance metadata using IMDSv2
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
+INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/instance-id)
+REGION=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/placement/region)
 
 log "Instance ID: $INSTANCE_ID, Region: $REGION, Cluster: $CLUSTER_NAME"
 
@@ -41,7 +42,7 @@ spec:
       clusterDomain: cluster.local
       maxPods: 110
     flags:
-      - --node-labels=node.kubernetes.io/instance-type=\$(curl -s http://169.254.169.254/latest/meta-data/instance-type)
+      - --node-labels=node.kubernetes.io/instance-type=\$(TOKEN=\$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s); curl -H "X-aws-ec2-metadata-token: \$TOKEN" -s http://169.254.169.254/latest/meta-data/instance-type)
 EOF
 
     # Add bootstrap arguments if provided
@@ -50,9 +51,9 @@ EOF
         echo "      - $BOOTSTRAP_ARGUMENTS" >> /tmp/nodeadm-config.yaml
     fi
 
-    # Initialize the node using nodeadm
-    log "Initializing node with nodeadm"
-    /usr/bin/nodeadm init /tmp/nodeadm-config.yaml
+    # Initialize the node using nodeadm with correct syntax
+    log "Initializing node with nodeadm using config file"
+    /usr/bin/nodeadm init --config-source file:///tmp/nodeadm-config.yaml
     
     if [ $? -eq 0 ]; then
         log "nodeadm initialization completed successfully"

@@ -217,7 +217,7 @@ locals {
         cluster_ca_data     = module.eks.cluster_certificate_authority_data
         bootstrap_arguments = v.bootstrap_arguments
       }) :
-      templatefile("${path.module}/user_data.sh", {
+      templatefile("${path.module}/user_data_universal.sh", {
         cluster_name        = local.cluster_name
         cluster_endpoint    = module.eks.cluster_endpoint
         cluster_ca_data     = module.eks.cluster_certificate_authority_data

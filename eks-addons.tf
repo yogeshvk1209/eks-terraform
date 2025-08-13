@@ -15,10 +15,11 @@ resource "time_sleep" "wait_for_nodes" {
 resource "aws_eks_addon" "coredns" {
   count = var.enable_self_managed_node_groups && var.install_eks_addons ? 1 : 0
   
-  cluster_name             = module.eks.cluster_name
-  addon_name               = "coredns"
-  addon_version            = var.coredns_version
-  resolve_conflicts        = "OVERWRITE"
+  cluster_name                = module.eks.cluster_name
+  addon_name                  = "coredns"
+  addon_version               = var.coredns_version
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
   
   depends_on = [
     time_sleep.wait_for_nodes
@@ -33,10 +34,11 @@ resource "aws_eks_addon" "coredns" {
 resource "aws_eks_addon" "vpc_cni" {
   count = var.enable_self_managed_node_groups && var.install_eks_addons ? 1 : 0
   
-  cluster_name             = module.eks.cluster_name
-  addon_name               = "vpc-cni"
-  addon_version            = var.vpc_cni_version
-  resolve_conflicts        = "OVERWRITE"
+  cluster_name                = module.eks.cluster_name
+  addon_name                  = "vpc-cni"
+  addon_version               = var.vpc_cni_version
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
   
   depends_on = [
     time_sleep.wait_for_nodes
@@ -51,9 +53,10 @@ resource "aws_eks_addon" "vpc_cni" {
 resource "aws_eks_addon" "ebs_csi" {
   count = var.enable_self_managed_node_groups && var.install_eks_addons ? 1 : 0
   
-  cluster_name             = module.eks.cluster_name
-  addon_name               = "aws-ebs-csi-driver"
-  resolve_conflicts        = "OVERWRITE"
+  cluster_name                = module.eks.cluster_name
+  addon_name                  = "aws-ebs-csi-driver"
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
   
   depends_on = [
     time_sleep.wait_for_nodes
