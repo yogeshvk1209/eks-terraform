@@ -7,14 +7,15 @@ module "eks" {
   cluster_endpoint_public_access = true
   enable_cluster_creator_admin_permissions = true
 
-  cluster_addons = {
-    coredns                = {
-      version  =  var.coredns_version
-    }
-    vpc-cni                = {
-      version  =  var.vpc_cni_version
-    }
-  }
+  # Disable add-ons initially - they will be installed after nodes are ready
+  # cluster_addons = {
+  #   coredns                = {
+  #     version  =  var.coredns_version
+  #   }
+  #   vpc-cni                = {
+  #     version  =  var.vpc_cni_version
+  #   }
+  # }
 
   enable_irsa = true
 

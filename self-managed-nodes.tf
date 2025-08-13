@@ -295,8 +295,11 @@ resource "aws_launch_template" "self_managed_nodes" {
     resource_type = "instance"
     tags = merge(
       {
-        Name                                        = "${local.cluster_name}-self-managed-${each.key}"
-        "kubernetes.io/cluster/${local.cluster_name}" = "owned"
+        Name                     = "${local.cluster_name}-self-managed-${each.key}"
+        "kubernetes-cluster"     = local.cluster_name
+        "kubernetes-cluster-owned" = "true"
+        "NodeGroup"              = each.key
+        "NodeType"               = "self-managed"
       },
       each.value.tags
     )
@@ -306,8 +309,11 @@ resource "aws_launch_template" "self_managed_nodes" {
     resource_type = "volume"
     tags = merge(
       {
-        Name                                        = "${local.cluster_name}-self-managed-${each.key}"
-        "kubernetes.io/cluster/${local.cluster_name}" = "owned"
+        Name                     = "${local.cluster_name}-self-managed-${each.key}"
+        "kubernetes-cluster"     = local.cluster_name
+        "kubernetes-cluster-owned" = "true"
+        "NodeGroup"              = each.key
+        "NodeType"               = "self-managed"
       },
       each.value.tags
     )
@@ -398,8 +404,20 @@ resource "aws_autoscaling_group" "self_managed_nodes" {
   }
   
   tag {
-    key                 = "kubernetes.io/cluster/${local.cluster_name}"
-    value               = "owned"
+    key                 = "kubernetes-cluster"
+    value               = local.cluster_name
+    propagate_at_launch = true
+  }
+  
+  tag {
+    key                 = "NodeGroup"
+    value               = each.key
+    propagate_at_launch = true
+  }
+  
+  tag {
+    key                 = "NodeType"
+    value               = "self-managed"
     propagate_at_launch = true
   }
   
@@ -417,6 +435,19 @@ resource "aws_autoscaling_group" "self_managed_nodes" {
   lifecycle {
     create_before_destroy = true
     ignore_changes       = [desired_capacity]
+  }
+  
+  # EKS cluster discovery tag (applied to ASG, not instances)
+  tag {
+    key                 = "kubernetes.io/cluster/${local.cluster_name}"
+    value               = "owned"
+    propagate_at_launch = false  # Don't propagate to instances (would cause invalid tag error)
+  }
+  
+  tag {
+    key                 = "ASG-Name"
+    value               = "${local.cluster_name}-self-managed-${each.key}-asg"
+    propagate_at_launch = false
   }
   
   depends_on = [

@@ -17,6 +17,9 @@ vpc_cni_version    = "v1.18.1-eksbuild.2"
 # Enable self-managed node groups
 enable_self_managed_node_groups = true
 
+# Install EKS add-ons after nodes are ready
+install_eks_addons = true
+
 # Self-managed node group configurations
 self_managed_node_groups = {
   # Example 1: Basic on-demand node group

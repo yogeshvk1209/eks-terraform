@@ -59,6 +59,13 @@ variable "managed_node_ami_id" {
   default     = ""
 }
 
+# EKS Add-ons configuration
+variable "install_eks_addons" {
+  description = "Whether to install EKS add-ons (CoreDNS, VPC CNI, EBS CSI)"
+  type        = bool
+  default     = true
+}
+
 # Self-managed node group variables
 variable "enable_self_managed_node_groups" {
   description = "Whether to create self-managed node groups"
