@@ -4,27 +4,27 @@
 
 ### 1. Basic Configuration Test
 ```bash
-terraform plan -var-file=temp-test/basic-test.tfvars
+terraform plan -var-file=configs/tfvars/basic-test.tfvars
 ```
 
 ### 2. Spot Instance Configuration Test
 ```bash
-terraform plan -var-file=temp-test/spot-test.tfvars
+terraform plan -var-file=configs/tfvars/spot-test.tfvars
 ```
 
 ### 3. Custom AMI Configuration Test
 ```bash
-terraform plan -var-file=temp-test/custom-ami-test.tfvars
+terraform plan -var-file=configs/tfvars/custom-ami-test.tfvars
 ```
 
 ### 4. Hybrid Configuration Test (Both Managed + Self-Managed)
 ```bash
-terraform plan -var-file=temp-test/hybrid-test.tfvars
+terraform plan -var-file=configs/tfvars/hybrid-test.tfvars
 ```
 
 ### 5. Disabled Configuration Test
 ```bash
-terraform plan -var-file=temp-test/disabled-test.tfvars
+terraform plan -var-file=configs/tfvars/disabled-test.tfvars
 ```
 
 ## Validation Tests
