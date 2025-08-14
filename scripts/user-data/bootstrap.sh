@@ -47,45 +47,65 @@ if [ -f /etc/eks/bootstrap.sh ]; then
         log "Legacy bootstrap completed successfully"
         BOOTSTRAP_SUCCESS=true
     else
-        log "Legacy bootstrap failed, will try nodeadm"
+        log "Legacy bootstrap failed (exit code: $?), will try nodeadm"
+        log "Legacy bootstrap error details:"
+        tail -20 /var/log/eks-bootstrap.log 2>/dev/null || echo "No bootstrap log available"
     fi
+else
+    log "No legacy bootstrap script found at /etc/eks/bootstrap.sh"
+    log "This appears to be AL2023, will try nodeadm"
 fi
 
 # Method 2: Try nodeadm if legacy bootstrap failed or doesn't exist
 if [ "$BOOTSTRAP_SUCCESS" = false ] && command -v nodeadm &> /dev/null; then
     log "Using nodeadm for AL2023"
     
-    # Try nodeadm with IMDS first (simplest approach)
-    log "Attempting nodeadm init with IMDS (default behavior)"
-    if /usr/bin/nodeadm init; then
-        log "nodeadm initialization with IMDS completed successfully"
+    # First, try a minimal approach - let nodeadm handle most configuration automatically
+    log "Attempting minimal nodeadm configuration"
+    
+    # Create a very simple config file
+    cat > /tmp/nodeadm-simple.yaml <<EOF
+---
+apiVersion: node.eks.aws/v1alpha1
+kind: NodeConfig
+spec:
+  cluster:
+    name: $CLUSTER_NAME
+    apiServerEndpoint: $CLUSTER_ENDPOINT
+    certificateAuthority: $CLUSTER_CA_DATA
+EOF
+    
+    log "Trying simple nodeadm configuration first"
+    if /usr/bin/nodeadm init --config-source file:///tmp/nodeadm-simple.yaml; then
+        log "nodeadm initialization with simple config completed successfully"
         BOOTSTRAP_SUCCESS=true
     else
-        log "nodeadm IMDS failed, trying with config file"
+        log "Simple nodeadm config failed, trying detailed config"
         
-        # Try to get cluster service CIDR from EKS API
-        log "Attempting to get cluster service CIDR from EKS API"
-        CLUSTER_CIDR=""
-        if command -v aws &> /dev/null; then
-            CLUSTER_CIDR=$(aws eks describe-cluster --name "$CLUSTER_NAME" --region "$REGION" --query 'cluster.kubernetesNetworkConfig.serviceIpv4Cidr' --output text 2>/dev/null || echo "")
-        fi
-        
-        # Use default EKS service CIDR if we couldn't get it from API
-        if [ -z "$CLUSTER_CIDR" ] || [ "$CLUSTER_CIDR" = "None" ]; then
-            CLUSTER_CIDR="172.20.0.0/16"
-            log "Using default EKS service CIDR: $CLUSTER_CIDR"
-        else
-            log "Retrieved cluster service CIDR: $CLUSTER_CIDR"
-        fi
-        
-        # Calculate DNS server IP (first IP in the service CIDR + 10)
-        DNS_SERVER="172.20.0.10"  # Default for 172.20.0.0/16
-        if [[ "$CLUSTER_CIDR" == "10.100.0.0/16" ]]; then
-            DNS_SERVER="10.100.0.10"
-        fi
-        
-        # Fallback: Create config file with proper CIDR
-        cat > /tmp/nodeadm-config.yaml <<EOF
+    # Try to get cluster service CIDR from EKS API
+    log "Attempting to get cluster service CIDR from EKS API"
+    CLUSTER_CIDR=""
+    if command -v aws &> /dev/null; then
+        CLUSTER_CIDR=$(aws eks describe-cluster --name "$CLUSTER_NAME" --region "$REGION" --query 'cluster.kubernetesNetworkConfig.serviceIpv4Cidr' --output text 2>/dev/null || echo "")
+    fi
+    
+    # Use default EKS service CIDR if we couldn't get it from API
+    if [ -z "$CLUSTER_CIDR" ] || [ "$CLUSTER_CIDR" = "None" ]; then
+        CLUSTER_CIDR="172.20.0.0/16"
+        log "Using default EKS service CIDR: $CLUSTER_CIDR"
+    else
+        log "Retrieved cluster service CIDR: $CLUSTER_CIDR"
+    fi
+    
+    # Calculate DNS server IP (first IP in the service CIDR + 10)
+    DNS_SERVER="172.20.0.10"  # Default for 172.20.0.0/16
+    if [[ "$CLUSTER_CIDR" == "10.100.0.0/16" ]]; then
+        DNS_SERVER="10.100.0.10"
+    fi
+    
+    # Create config file with proper CIDR and validate YAML syntax
+    log "Creating nodeadm configuration file"
+    cat > /tmp/nodeadm-config.yaml <<EOF
 ---
 apiVersion: node.eks.aws/v1alpha1
 kind: NodeConfig
@@ -105,19 +125,62 @@ spec:
       - --node-labels=node.kubernetes.io/instance-type=$INSTANCE_TYPE
 EOF
 
-        # Add bootstrap arguments if provided
-        if [ ! -z "$BOOTSTRAP_ARGUMENTS" ]; then
-            log "Adding bootstrap arguments: $BOOTSTRAP_ARGUMENTS"
-            echo "      - $BOOTSTRAP_ARGUMENTS" >> /tmp/nodeadm-config.yaml
+    # Add bootstrap arguments if provided
+    if [ ! -z "$BOOTSTRAP_ARGUMENTS" ]; then
+        log "Adding bootstrap arguments: $BOOTSTRAP_ARGUMENTS"
+        echo "      - $BOOTSTRAP_ARGUMENTS" >> /tmp/nodeadm-config.yaml
+    fi
+    
+    # Validate YAML syntax before using it
+    log "Validating nodeadm configuration syntax"
+    if command -v python3 &> /dev/null; then
+        python3 -c "
+import yaml
+import sys
+try:
+    with open('/tmp/nodeadm-config.yaml', 'r') as f:
+        yaml.safe_load(f)
+    print('YAML syntax is valid')
+except yaml.YAMLError as e:
+    print(f'YAML syntax error: {e}')
+    sys.exit(1)
+" 2>/dev/null
+        if [ $? -ne 0 ]; then
+            log "❌ YAML configuration is invalid, skipping nodeadm"
+            log "Config file contents:"
+            cat /tmp/nodeadm-config.yaml
+        else
+            log "✅ YAML configuration is valid"
+            
+            # Show config for debugging
+            log "NodeAdm configuration:"
+            cat /tmp/nodeadm-config.yaml
+            
+            log "Attempting nodeadm init with config file"
+            if /usr/bin/nodeadm init --config-source file:///tmp/nodeadm-config.yaml; then
+                log "nodeadm initialization with config file completed successfully"
+                BOOTSTRAP_SUCCESS=true
+            else
+                log "nodeadm config file method failed, will try manual kubelet setup"
+                log "NodeAdm error details:"
+                journalctl -u nodeadm --no-pager --lines=10 2>/dev/null || echo "No nodeadm service logs"
+            fi
         fi
-
+    else
+        log "Python3 not available for YAML validation, proceeding with nodeadm"
+        
+        # Show config for debugging
+        log "NodeAdm configuration:"
+        cat /tmp/nodeadm-config.yaml
+        
         log "Attempting nodeadm init with config file"
         if /usr/bin/nodeadm init --config-source file:///tmp/nodeadm-config.yaml; then
             log "nodeadm initialization with config file completed successfully"
             BOOTSTRAP_SUCCESS=true
         else
-            log "nodeadm config file method also failed, will try manual kubelet setup"
+            log "nodeadm config file method failed, will try manual kubelet setup"
         fi
+    fi
     fi
 fi
 
@@ -126,11 +189,15 @@ if [ "$BOOTSTRAP_SUCCESS" = false ]; then
     log "Setting up kubelet manually"
     
     # Create kubelet config directory
-    mkdir -p /var/lib/kubelet
+    mkdir -p /var/lib/kubelet/pki
     mkdir -p /etc/kubernetes/pki
     
     # Create CA certificate
     echo "$CLUSTER_CA_DATA" | base64 -d > /etc/kubernetes/pki/ca.crt
+    
+    # Ensure proper permissions
+    chmod 644 /etc/kubernetes/pki/ca.crt
+    chown root:root /etc/kubernetes/pki/ca.crt
     
     # Create kubeconfig for kubelet
     cat > /var/lib/kubelet/kubeconfig <<EOF
@@ -221,6 +288,22 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
+    # Ensure containerd is properly configured
+    log "Configuring containerd..."
+    
+    # Create containerd config if it doesn't exist
+    if [ ! -f /etc/containerd/config.toml ]; then
+        mkdir -p /etc/containerd
+        containerd config default > /etc/containerd/config.toml
+        
+        # Enable systemd cgroup driver
+        sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+    fi
+    
+    # Restart containerd to apply config
+    systemctl restart containerd
+    sleep 2
+    
     # Start services
     systemctl daemon-reload
     systemctl enable kubelet
@@ -243,21 +326,53 @@ systemctl status kubelet --no-pager
 # Enhanced node joining verification and debugging
 log "Verifying node joining process..."
 
+# Ensure containerd is running before checking kubelet
+log "Ensuring containerd is running..."
+if ! systemctl is-active --quiet containerd; then
+    log "Starting containerd..."
+    systemctl start containerd
+    sleep 3
+fi
+
+if systemctl is-active --quiet containerd; then
+    log "✅ Containerd is running"
+else
+    log "❌ Containerd failed to start"
+    systemctl status containerd --no-pager
+fi
+
 # Check if kubelet is actually running
 if ! systemctl is-active --quiet kubelet; then
     log "ERROR: kubelet is not running after bootstrap"
-    systemctl status kubelet --no-pager
-    exit 1
+    log "Attempting to start kubelet..."
+    systemctl start kubelet
+    sleep 5
+    
+    if systemctl is-active --quiet kubelet; then
+        log "✅ Kubelet started successfully"
+    else
+        log "❌ Kubelet failed to start"
+        systemctl status kubelet --no-pager
+        exit 1
+    fi
 fi
 
-# Check kubelet logs for errors
-log "Checking kubelet logs for errors..."
-KUBELET_ERRORS=$(journalctl -u kubelet --since "5 minutes ago" --no-pager | grep -i "error\|failed\|denied" | tail -5)
+# Check kubelet logs for critical errors (filter out known harmless warnings)
+log "Checking kubelet logs for critical errors..."
+KUBELET_ERRORS=$(journalctl -u kubelet --since "5 minutes ago" --no-pager | grep -i "error\|failed\|denied" | grep -v "RuntimeConfig from runtime service failed" | grep -v "unknown method RuntimeConfig" | tail -5)
 if [ ! -z "$KUBELET_ERRORS" ]; then
-    log "WARNING: Found kubelet errors:"
+    log "WARNING: Found critical kubelet errors:"
     echo "$KUBELET_ERRORS" | while read line; do
         log "  $line"
     done
+else
+    log "✅ No critical kubelet errors found"
+fi
+
+# Check for the specific RuntimeConfig warning (informational only)
+RUNTIME_CONFIG_WARNINGS=$(journalctl -u kubelet --since "5 minutes ago" --no-pager | grep "RuntimeConfig from runtime service failed" | wc -l)
+if [ "$RUNTIME_CONFIG_WARNINGS" -gt 0 ]; then
+    log "ℹ️  Found $RUNTIME_CONFIG_WARNINGS RuntimeConfig warnings (these are usually harmless)"
 fi
 
 # Check if kubelet can reach the API server
@@ -272,8 +387,25 @@ fi
 log "Checking node certificates..."
 if [ -f /var/lib/kubelet/pki/kubelet-client-current.pem ]; then
     log "✅ Kubelet client certificate exists"
+elif [ -f /var/lib/kubelet/pki/kubelet-client.crt ]; then
+    log "✅ Kubelet client certificate exists (alternative location)"
 else
-    log "❌ Kubelet client certificate missing"
+    log "❌ Kubelet client certificate missing - this indicates authentication issues"
+    log "Certificate directories:"
+    ls -la /var/lib/kubelet/pki/ 2>/dev/null || log "No pki directory found"
+    
+    # Try to regenerate certificates if kubelet is running
+    if systemctl is-active --quiet kubelet; then
+        log "Attempting to restart kubelet to regenerate certificates..."
+        systemctl restart kubelet
+        sleep 5
+        
+        if [ -f /var/lib/kubelet/pki/kubelet-client-current.pem ] || [ -f /var/lib/kubelet/pki/kubelet-client.crt ]; then
+            log "✅ Certificate regenerated after kubelet restart"
+        else
+            log "❌ Certificate still missing after restart"
+        fi
+    fi
 fi
 
 # Wait for node to be ready with enhanced logging

@@ -13,16 +13,17 @@ scripts/
 
 ## User Data Scripts (`user-data/`)
 
-Bootstrap script for EKS worker nodes:
+Bootstrap scripts for EKS worker nodes:
 
-- **`bootstrap.sh`** - Universal bootstrap script that works with both AL2 and AL2023 AMIs with multiple fallback methods
+- **`bootstrap-compact.sh`** - *(Active)* Compact universal bootstrap script under 16KB AWS limit
+- **`bootstrap.sh`** - *(Reference)* Full-featured bootstrap script with extensive debugging (too large for user-data)
 
 ### Usage
 
-The bootstrap script is automatically used by Terraform when creating self-managed node groups. It's referenced in `self-managed-nodes.tf`:
+The compact bootstrap script is automatically used by Terraform when creating self-managed node groups. It's referenced in `self-managed-nodes.tf`:
 
 ```hcl
-templatefile("${path.module}/scripts/user-data/bootstrap.sh", {
+templatefile("${path.module}/scripts/user-data/bootstrap-compact.sh", {
   cluster_name        = local.cluster_name
   cluster_endpoint    = module.eks.cluster_endpoint
   cluster_ca_data     = module.eks.cluster_certificate_authority_data
@@ -51,6 +52,8 @@ Management and deployment utilities:
 - **`debug-bootstrap.sh`** - Debug EKS bootstrap issues and system information
 - **`collect-logs.sh`** - Comprehensive log collection for troubleshooting
 - **`check-node-join.sh`** - Quick troubleshooting for nodes that don't join cluster
+- **`fix-kubelet-certs.sh`** - Fix kubelet certificate issues and regenerate certificates
+- **`debug-nodeadm.sh`** - Debug nodeadm-specific issues and configuration
 
 ### Usage Examples
 
@@ -75,6 +78,12 @@ Management and deployment utilities:
 
 # Quick node join troubleshooting
 ./scripts/utils/check-node-join.sh <cluster-name>
+
+# Fix kubelet certificate issues
+./scripts/utils/fix-kubelet-certs.sh <cluster-name>
+
+# Debug nodeadm issues (AL2023 specific)
+./scripts/utils/debug-nodeadm.sh
 ```
 
 ## Best Practices
