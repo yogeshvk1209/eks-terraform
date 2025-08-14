@@ -203,6 +203,7 @@ self_managed_node_groups = {
    - Check IAM permissions and security group rules
    - Review bootstrap logs: `sudo cat /var/log/eks-bootstrap.log`
    - Verify IMDSv2 configuration
+   - Check if bootstrap method succeeded (legacy → nodeadm → manual)
 
 2. **CoreDNS addon stuck:**
    - Ensure nodes are ready before addon installation

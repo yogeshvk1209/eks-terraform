@@ -13,21 +13,16 @@ scripts/
 
 ## User Data Scripts (`user-data/`)
 
-Bootstrap scripts for EKS worker nodes:
+Bootstrap script for EKS worker nodes:
 
-- **`user_data_universal.sh`** - *(Recommended)* Universal bootstrap script that works with both AL2 and AL2023 AMIs
-- **`user_data_simple.sh`** - Simple bootstrap using legacy EKS bootstrap script
-- **`user_data_fixed.sh`** - Enhanced bootstrap with multiple fallback methods
-- **`user_data.sh`** - Original bootstrap script (legacy)
+- **`bootstrap.sh`** - Universal bootstrap script that works with both AL2 and AL2023 AMIs with multiple fallback methods
 
 ### Usage
 
-The bootstrap scripts are automatically used by Terraform when creating self-managed node groups. The default script is `user_data_universal.sh`.
-
-To use a different script, modify the `templatefile` reference in `self-managed-nodes.tf`:
+The bootstrap script is automatically used by Terraform when creating self-managed node groups. It's referenced in `self-managed-nodes.tf`:
 
 ```hcl
-templatefile("${path.module}/scripts/user-data/user_data_simple.sh", {
+templatefile("${path.module}/scripts/user-data/bootstrap.sh", {
   cluster_name        = local.cluster_name
   cluster_endpoint    = module.eks.cluster_endpoint
   cluster_ca_data     = module.eks.cluster_certificate_authority_data
@@ -37,11 +32,13 @@ templatefile("${path.module}/scripts/user-data/user_data_simple.sh", {
 
 ### Features
 
-All scripts support:
+The bootstrap script supports:
 - **IMDSv2** - Secure instance metadata access
 - **AL2 and AL2023** - Compatible with both Amazon Linux versions
 - **ARM64 and x86_64** - Multi-architecture support
-- **Error handling** - Comprehensive logging and fallback mechanisms
+- **Multiple fallback methods** - Legacy bootstrap → nodeadm → manual kubelet setup
+- **Comprehensive logging** - Detailed bootstrap process logging
+- **Error handling** - Robust error handling and recovery
 
 ## Utility Scripts (`utils/`)
 
@@ -50,6 +47,10 @@ Management and deployment utilities:
 - **`monitor_and_destroy.sh`** - Monitors Terraform apply and auto-destroys on failure
 - **`force-cleanup.sh`** - Force cleanup of stuck EKS resources
 - **`test-imdsv2.sh`** - Test script to verify IMDSv2 functionality
+- **`test-yaml-config.sh`** - Test nodeadm YAML configuration syntax
+- **`debug-bootstrap.sh`** - Debug EKS bootstrap issues and system information
+- **`collect-logs.sh`** - Comprehensive log collection for troubleshooting
+- **`check-node-join.sh`** - Quick troubleshooting for nodes that don't join cluster
 
 ### Usage Examples
 
@@ -62,6 +63,18 @@ Management and deployment utilities:
 
 # Test IMDSv2 (run on EC2 instance)
 ./scripts/utils/test-imdsv2.sh
+
+# Test nodeadm YAML configuration
+./scripts/utils/test-yaml-config.sh
+
+# Debug bootstrap issues (run on EC2 instance)
+./scripts/utils/debug-bootstrap.sh [cluster-name]
+
+# Collect comprehensive logs for troubleshooting
+./scripts/utils/collect-logs.sh [cluster-name]
+
+# Quick node join troubleshooting
+./scripts/utils/check-node-join.sh <cluster-name>
 ```
 
 ## Best Practices
