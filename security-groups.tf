@@ -17,6 +17,17 @@ resource "aws_security_group_rule" "app_test_worker_mgmt_ingress" {
   ]
 }
 
+# SSH access for debugging
+resource "aws_security_group_rule" "app_test_worker_mgmt_ssh" {
+  description       = "allow SSH access for debugging"
+  from_port         = 22
+  protocol          = "tcp"
+  to_port           = 22
+  security_group_id = aws_security_group.app_test_worker_mgmt.id
+  type              = "ingress"
+  cidr_blocks       = ["10.0.0.0/8"]
+}
+
 resource "aws_security_group_rule" "app_test_worker_mgmt_egress" {
   description       = "allow outbound traffic to anywhere"
   from_port         = 0

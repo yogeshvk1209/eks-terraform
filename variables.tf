@@ -73,6 +73,12 @@ variable "enable_self_managed_node_groups" {
   default     = false
 }
 
+variable "use_public_subnets_for_nodes" {
+  description = "Whether to place self-managed nodes in public subnets (for debugging)"
+  type        = bool
+  default     = false
+}
+
 variable "self_managed_node_groups" {
   description = "Map of self-managed node group configurations"
   type = map(object({

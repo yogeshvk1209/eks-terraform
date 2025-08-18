@@ -46,7 +46,12 @@ spec:
     name: $CLUSTER_NAME
     apiServerEndpoint: $CLUSTER_ENDPOINT
     certificateAuthority: $CLUSTER_CA_DATA
+    cidr: 172.20.0.0/16
   kubelet:
+    config:
+      clusterDomain: cluster.local
+      clusterDNS:
+        - 172.20.0.10
     flags:
       - --node-labels=node.kubernetes.io/instance-type=$INSTANCE_TYPE
 EOF
@@ -105,6 +110,14 @@ EOF
 fi
 
 [ "$BOOTSTRAP_SUCCESS" = false ] && { log "All methods failed"; exit 1; }
+
+log "Checking kubelet status"
+systemctl status kubelet
+log "tail bootstrap log"
+tail /var/log/eks-bootstrap.log
+log "jrnl ctl logs for kubelet"
+journalctl -u kubelet
+
 
 # Wait for node to join
 log "Waiting for node to join cluster..."
