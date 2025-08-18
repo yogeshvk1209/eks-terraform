@@ -26,11 +26,6 @@ module "eks" {
   # }
 
   enable_irsa = true
-
-#  tags = {
-#    cluster = "app_test"
-#  }
-
   vpc_id = module.vpc.vpc_id
 
 ################################################

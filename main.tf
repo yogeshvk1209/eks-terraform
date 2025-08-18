@@ -10,9 +10,7 @@ locals {
   cluster_name = "apptest-eks-${random_string.suffix.result}"
   tags = {
     cluster    = "app_test"
-    Example    = local.name
-    GithubRepo = "terraform-aws-eks"
-    GithubOrg  = "terraform-aws-modules"
+    Example    = local.cluster_name
   }
 }
 
