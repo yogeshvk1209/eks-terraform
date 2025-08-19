@@ -1,14 +1,14 @@
 module "eks" {
-  source          = "terraform-aws-modules/eks/aws"
-  version         = "20.37.1"
-  cluster_name    = local.cluster_name
-  cluster_version = var.kubernetes_version
-  subnet_ids      = module.vpc.private_subnets
+  source             = "terraform-aws-modules/eks/aws"
+  version            = "21.1.0"
+  name       = local.cluster_name
+  kubernetes_version = var.kubernetes_version
+  subnet_ids         = module.vpc.private_subnets
   
   # Endpoint access configuration for self-managed nodes
-  cluster_endpoint_public_access  = true
-  cluster_endpoint_private_access = true
-  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
+  endpoint_public_access  = true
+  endpoint_private_access = true
+  endpoint_public_access_cidrs = ["0.0.0.0/0"]
   
   enable_cluster_creator_admin_permissions = true
   
@@ -16,14 +16,14 @@ module "eks" {
   authentication_mode = "API_AND_CONFIG_MAP"
 
   # Disable add-ons initially - they will be installed after nodes are ready
-  # cluster_addons = {
-  #   coredns                = {
-  #     version  =  var.coredns_version
-  #   }
-  #   vpc-cni                = {
-  #     version  =  var.vpc_cni_version
-  #   }
-  # }
+   addons = {
+    # coredns                = {
+    #   version  =  var.coredns_version
+    # }
+     vpc-cni                = {
+       version  =  var.vpc_cni_version
+     }
+   }
 
   enable_irsa = true
   vpc_id = module.vpc.vpc_id
@@ -33,9 +33,11 @@ module "eks" {
 ################################################
 self_managed_node_groups = {
     app_test = {
-      ami_type      = "AL2023_x86_64_STANDARD"
-      ami_id         = "ami-0fa03f713b55841a2"
-      instance_type  = "t3.medium"
+      #ami_type      = "AL2023_x86_64_STANDARD"
+      ami_type      = "AL2023_ARM_64_STANDARD"
+      #ami_id         = "ami-0d0837afd9e105890"
+      ami_id         = "ami-0c62bf97314751b4d"
+      instance_type  = "t4g.medium"
 
       min_size = 1
       max_size = 2
