@@ -32,8 +32,9 @@ module "eks" {
 ######## Self Managed Node Groups ##############
 ################################################
 self_managed_node_groups = {
-    example = {
+    app_test = {
       ami_type      = "AL2023_x86_64_STANDARD"
+      #ami_id        = "ami-08740306b665cd8ea"
       instance_type = "t3.medium"
 
       min_size = 1
@@ -44,20 +45,24 @@ self_managed_node_groups = {
 
       # This is not required - demonstrates how to pass additional configuration to nodeadm
       # Ref https://awslabs.github.io/amazon-eks-ami/nodeadm/doc/api/
-      #cloudinit_pre_nodeadm = [
-      #  {
-      #    content_type = "application/node.eks.aws"
-      #    content      = <<-EOT
-      #      ---
-      #      apiVersion: node.eks.aws/v1alpha1
-      #      kind: NodeConfig
-      #      spec:
-      #        kubelet:
-      #          config:
-      #            shutdownGracePeriod: 30s
-      #    EOT
-      #  }
-      #]
+#      cloudinit_pre_nodeadm = [
+#        {
+#          content_type = "application/node.eks.aws"
+#          content      = <<-EOT
+#            ---
+#            apiVersion: node.eks.aws/v1alpha1
+#            kind: NodeConfig
+#            spec:
+#              cluster:
+#                name: local.cluster_name
+#                apiServerEndpoint: module.eks.cluster_endpoint
+#                certificateAuthority: module.eks.cluster_certificate_authority_data
+#              kubelet:
+#                config:
+#                  shutdownGracePeriod: 30s
+#          EOT
+#        }
+#      ]
     }
   }
 

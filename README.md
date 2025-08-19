@@ -114,6 +114,13 @@ Before you begin, ensure you have:
 
 This EKS configuration supports both managed and self-managed node groups, with self-managed nodes providing greater control and cost optimization opportunities.
 
+## AMI for EKS
+
+```
+aws ec2 describe-images --filters "Name=name,Values=amazon-eks-node-al2023-x86_64-standard-*" --query "sort_by(Images, &CreationDate)[-10:] | reverse(@) | [].[CreationDate, Name, ImageId]" --output table
+
+```
+
 ### Key Differences: Managed vs Self-Managed Node Groups
 
 | Feature | Managed Node Groups | Self-Managed Node Groups |
