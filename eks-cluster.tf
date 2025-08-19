@@ -34,8 +34,8 @@ module "eks" {
 self_managed_node_groups = {
     app_test = {
       ami_type      = "AL2023_x86_64_STANDARD"
-      #ami_id        = "ami-08740306b665cd8ea"
-      instance_type = "t3.medium"
+      ami_id         = "ami-0fa03f713b55841a2"
+      instance_type  = "t3.medium"
 
       min_size = 1
       max_size = 2
