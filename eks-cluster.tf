@@ -32,39 +32,23 @@ module "eks" {
 ######## Self Managed Node Groups ##############
 ################################################
 self_managed_node_groups = {
-    app_test = {
+#    app_test_1_32 = {
+#      #ami_type       = "AL2023_x86_64_STANDARD"
+#      ami_type       = "AL2023_ARM_64_STANDARD"
+#      ami_id         = "ami-0d0837afd9e105890"
+#      instance_type  = "t4g.medium"
+#       min_size = 1
+#       max_size = 2
+#       desired_size = 1
+#    }
+    app_test_1_33 = {
       #ami_type      = "AL2023_x86_64_STANDARD"
       ami_type      = "AL2023_ARM_64_STANDARD"
-      #ami_id         = "ami-0d0837afd9e105890"
       ami_id         = "ami-0c62bf97314751b4d"
       instance_type  = "t4g.medium"
-
       min_size = 1
       max_size = 2
-      # This value is ignored after the initial creation
-      # https://github.com/bryantbiggs/eks-desired-size-hack
       desired_size = 1
-
-      # This is not required - demonstrates how to pass additional configuration to nodeadm
-      # Ref https://awslabs.github.io/amazon-eks-ami/nodeadm/doc/api/
-#      cloudinit_pre_nodeadm = [
-#        {
-#          content_type = "application/node.eks.aws"
-#          content      = <<-EOT
-#            ---
-#            apiVersion: node.eks.aws/v1alpha1
-#            kind: NodeConfig
-#            spec:
-#              cluster:
-#                name: local.cluster_name
-#                apiServerEndpoint: module.eks.cluster_endpoint
-#                certificateAuthority: module.eks.cluster_certificate_authority_data
-#              kubelet:
-#                config:
-#                  shutdownGracePeriod: 30s
-#          EOT
-#        }
-#      ]
     }
   }
 
@@ -78,20 +62,16 @@ self_managed_node_groups = {
 #    instance_types         = ["t4g.medium","t4g.small"]
 #    vpc_security_group_ids = [aws_security_group.app_test_worker_mgmt.id]
 #  }
-
 #  eks_managed_node_groups = {
-
 #    node_group1 = {
 #      min_size     = 1
 #      max_size     = 3
 #      desired_size = 1
       #capacity_type = "SPOT"
 #      cluster_version = var.node_eks_version
-      
       # Explicitly set AMI type and instance types to ensure compatibility
 #      ami_type = var.managed_node_ami_type
 #      instance_types = ["t4g.medium", "t4g.small"]  # ARM64 instances for ARM64 AMI
-      
       # Use specific AMI ID if provided, otherwise use ami_type
 #      ami_id = var.managed_node_ami_id != "" ? var.managed_node_ami_id : null
 #    }
