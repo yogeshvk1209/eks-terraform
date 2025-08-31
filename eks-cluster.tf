@@ -68,7 +68,7 @@ self_managed_node_groups = {
 #      max_size     = 3
 #      desired_size = 1
       #capacity_type = "SPOT"
-#      cluster_version = var.node_eks_version
+#     cluster_version = var.node_eks_version
       # Explicitly set AMI type and instance types to ensure compatibility
 #      ami_type = var.managed_node_ami_type
 #      instance_types = ["t4g.medium", "t4g.small"]  # ARM64 instances for ARM64 AMI
