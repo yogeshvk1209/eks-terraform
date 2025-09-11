@@ -1,4 +1,5 @@
 resource "aws_security_group" "app_test_worker_mgmt" {
+  description = "Managed by TF"
   name_prefix = "app_test_worker_management"
   vpc_id      = module.vpc.vpc_id
 }
