@@ -9,8 +9,8 @@ data "aws_caller_identity" "current" {}
 locals {
   cluster_name = "apptest-eks-${random_string.suffix.result}"
   tags = {
-    cluster    = "app_test"
-    Example    = local.cluster_name
+    cluster = "app_test"
+    Example = local.cluster_name
   }
 }
 
@@ -22,7 +22,7 @@ resource "random_string" "suffix" {
 
 
 terraform {
-  required_version = ">= 1.12.0"
+  required_version = "~> 1.5.0"
   required_providers {
     random = {
       source  = "hashicorp/random"
@@ -34,11 +34,11 @@ terraform {
     }
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 6.9.0"
+      version = "~> 6.21.0"
     }
     local = {
       source  = "hashicorp/local"
-      version = "~> 2.5.3"
+      version = "~> 2.6.1"
     }
   }
 }

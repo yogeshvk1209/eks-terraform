@@ -11,11 +11,7 @@ resource "aws_security_group_rule" "app_test_worker_mgmt_ingress" {
   to_port           = 0
   security_group_id = aws_security_group.app_test_worker_mgmt.id
   type              = "ingress"
-  cidr_blocks = [
-    "10.0.0.0/8",
-    "172.16.0.0/12",
-    "192.168.0.0/16",
-  ]
+  cidr_blocks       = var.worker_mgmt_ingress_cidr_blocks
 }
 
 # SSH access for debugging
@@ -26,7 +22,7 @@ resource "aws_security_group_rule" "app_test_worker_mgmt_ssh" {
   to_port           = 22
   security_group_id = aws_security_group.app_test_worker_mgmt.id
   type              = "ingress"
-  cidr_blocks       = ["10.0.0.0/8"]
+  cidr_blocks       = var.worker_mgmt_ssh_ingress_cidr_blocks
 }
 
 resource "aws_security_group_rule" "app_test_worker_mgmt_egress" {
